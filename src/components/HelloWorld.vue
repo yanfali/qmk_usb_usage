@@ -1,11 +1,16 @@
 <template>
-  <ag-grid-vue
-    style="width: 100%; height: 70vh;"
-    class="ag-theme-balham-dark"
-    :columnDefs="columnDefs"
-    :rowData="rowData"
-  >
-  </ag-grid-vue>
+  <div>
+    <h2>QMK USB VID/PID Usage</h2>
+    {{ this.rowData.length }} keyboards, {{ this.vids.length }} vids,
+    {{ this.pids.length }} pids
+    <ag-grid-vue
+      style="width: 100vw; height: 100vh;"
+      class="ag-theme-balham-dark"
+      :columnDefs="columnDefs"
+      :rowData="rowData"
+    >
+    </ag-grid-vue>
+  </div>
 </template>
 
 <script>
@@ -27,7 +32,9 @@ export default {
         { headerName: "Manu", field: "manufacturer", sortable: true },
         { headerName: "Desc", field: "description", sortable: true }
       ],
-      rowData: null
+      rowData: null,
+      vids: [],
+      pids: []
     };
   },
   beforeMount() {
@@ -36,9 +43,11 @@ export default {
       if (resp.status === 200) {
         rowData = Object.keys(resp.data).reduce((acc, vid) => {
           const byVid = resp.data[vid];
+          this.vids.push(vid);
           acc.push(
             Object.keys(byVid).reduce((keebs, pid) => {
               const byPid = byVid[pid];
+              this.pids.push(pid);
               keebs.push(
                 Object.keys(byPid).reduce((boards, keyboard) => {
                   boards.push(byPid[keyboard]);
