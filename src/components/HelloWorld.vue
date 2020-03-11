@@ -32,7 +32,7 @@ export default {
         { headerName: "Manu", field: "manufacturer", sortable: true },
         { headerName: "Desc", field: "description", sortable: true }
       ],
-      rowData: null,
+      rowData: [],
       vids: [],
       pids: []
     };
