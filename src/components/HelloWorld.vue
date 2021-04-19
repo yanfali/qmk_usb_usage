@@ -22,6 +22,7 @@
       :defaultColDef="defaultColDef"
       :rowData="_rowData"
       :sizeColumnsToFit="true"
+      @gridReady="onGridReady"
     >
     </ag-grid-vue>
   </div>
@@ -35,45 +36,40 @@ import Fuse from "fuse.js";
 export default {
   name: "HelloWorld",
   components: {
-    AgGridVue
+    AgGridVue,
   },
   data() {
     return {
       defaultColDef: {
         sortable: true,
-        resizable: true
+        resizable: true,
       },
       columnDefs: [
         {
           headerName: "Keyboard",
-          field: "keyboard"
+          field: "keyboard",
+          minWidth: 300,
+          cellClass: ["left-aligned"],
         },
         {
           headerName: "VendorID",
-          field: "vendor_id"
+          field: "vid",
         },
         {
           headerName: "ProductID",
-          field: "product_id"
+          field: "pid",
         },
         {
           headerName: "Device ver",
-          field: "device_ver"
+          field: "device_ver",
         },
-        {
-          headerName: "Manu",
-          field: "manufacturer"
-        },
-        {
-          headerName: "Desc",
-          field: "description"
-        }
       ],
       rowData: [],
       vids: [],
       pids: [],
       filter: "",
-      fuse: undefined
+      fuse: undefined,
+      gridApi: undefined,
     };
   },
   computed: {
@@ -81,12 +77,20 @@ export default {
       if (this.filter === "") {
         return this.rowData;
       } else {
-        return this.fuse.search(this.filter).map(r => r.item);
+        return this.fuse.search(this.filter).map((r) => r.item);
       }
-    }
+    },
+  },
+  methods: {
+    onGridReady(params) {
+      this.gridApi = params.api;
+      this.gridColumnApi = params.columnApi;
+      const sortModel = [{ colId: "keyboard", sort: "asc" }];
+      this.gridApi.setSortModel(sortModel);
+    },
   },
   beforeMount() {
-    axios.get("https://api.qmk.fm/v1/usb").then(resp => {
+    axios.get("https://api.qmk.fm/v1/usb").then((resp) => {
       let rowData = [];
       if (resp.status === 200) {
         rowData = Object.keys(resp.data).reduce((acc, vid) => {
@@ -98,7 +102,7 @@ export default {
               this.pids.push(pid);
               keebs.push(
                 Object.keys(byPid).reduce((boards, keyboard) => {
-                  boards.push(byPid[keyboard]);
+                  boards.push({ ...byPid[keyboard], keyboard });
                   return boards;
                 }, [])
               );
@@ -110,21 +114,14 @@ export default {
         rowData = rowData.flat(3);
         this.rowData = rowData;
         this.fuse = new Fuse(rowData, {
-          keys: [
-            "keyboard",
-            "vendor_id",
-            "product_id",
-            "device_ver",
-            "description",
-            "manufacturer"
-          ],
+          keys: ["keyboard", "vid", "pid", "device_ver"],
           minMatchCharLength: 3,
           distance: 30,
-          threshold: 0.4
+          threshold: 0.4,
         });
       }
     });
-  }
+  },
 };
 </script>
 
@@ -139,6 +136,9 @@ export default {
 .left-top {
   text-align: left;
   width: 100%;
+}
+.left-aligned {
+  text-align: left;
 }
 .right-top {
   text-align: right;
