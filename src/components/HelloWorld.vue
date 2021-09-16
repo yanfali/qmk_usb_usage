@@ -29,72 +29,73 @@
 </template>
 
 <script>
-import { AgGridVue } from "ag-grid-vue";
-import axios from "axios";
-import Fuse from "fuse.js";
+import { AgGridVue } from 'ag-grid-vue';
+import axios from 'axios';
+import Fuse from 'fuse.js';
 
 export default {
-  name: "HelloWorld",
+  name: 'HelloWorld',
   components: {
-    AgGridVue,
+    AgGridVue
   },
   data() {
     return {
       defaultColDef: {
         sortable: true,
-        resizable: true,
+        resizable: true
       },
       columnDefs: [
         {
-          headerName: "Keyboard",
-          field: "keyboard",
+          headerName: 'Keyboard',
+          field: 'keyboard',
           minWidth: 300,
-          cellClass: ["left-aligned"],
+          cellClass: ['left-aligned']
         },
         {
-          headerName: "VendorID",
-          field: "vid",
+          headerName: 'VendorID',
+          field: 'vid'
         },
         {
-          headerName: "ProductID",
-          field: "pid",
+          headerName: 'ProductID',
+          field: 'pid'
         },
         {
-          headerName: "Device ver",
-          field: "device_ver",
-        },
+          headerName: 'Device ver',
+          field: 'device_ver'
+        }
       ],
       rowData: [],
       vids: [],
       pids: [],
-      filter: "",
+      filter: '',
       fuse: undefined,
-      gridApi: undefined,
+      gridApi: undefined
     };
   },
   computed: {
     _rowData() {
-      if (this.filter === "") {
+      if (this.filter === '') {
         return this.rowData;
       } else {
-        return this.fuse.search(this.filter).map((r) => r.item);
+        return this.fuse.search(this.filter).map(r => r.item);
       }
-    },
+    }
   },
   methods: {
     onGridReady(params) {
       this.gridApi = params.api;
       this.gridColumnApi = params.columnApi;
-      const sortModel = [{ colId: "keyboard", sort: "asc" }];
+      const sortModel = [{ colId: 'keyboard', sort: 'asc' }];
       this.gridApi.setSortModel(sortModel);
-    },
+    }
   },
   beforeMount() {
-    axios.get("https://api.qmk.fm/v1/usb").then((resp) => {
+    axios.get('https://keyboards.qmk.fm/v1/usb.json').then(resp => {
       let rowData = [];
       if (resp.status === 200) {
-        rowData = Object.keys(resp.data).reduce((acc, vid) => {
-          const byVid = resp.data[vid];
+        const usb = resp.data.usb;
+        rowData = Object.keys(usb).reduce((acc, vid) => {
+          const byVid = usb[vid];
           this.vids.push(vid);
           acc.push(
             Object.keys(byVid).reduce((keebs, pid) => {
@@ -114,21 +115,21 @@ export default {
         rowData = rowData.flat(3);
         this.rowData = rowData;
         this.fuse = new Fuse(rowData, {
-          keys: ["keyboard", "vid", "pid", "device_ver"],
+          keys: ['keyboard', 'vid', 'pid', 'device_ver'],
           minMatchCharLength: 3,
           distance: 30,
-          threshold: 0.4,
+          threshold: 0.4
         });
       }
     });
-  },
+  }
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss">
-@import "../../node_modules/ag-grid-community/dist/styles/ag-grid.css";
-@import "../../node_modules/ag-grid-community/dist/styles/ag-theme-balham-dark.css";
+@import '../../node_modules/ag-grid-community/dist/styles/ag-grid.css';
+@import '../../node_modules/ag-grid-community/dist/styles/ag-theme-balham-dark.css';
 .top-bar {
   display: grid;
   grid-template: 1fr / 1fr 1fr;
