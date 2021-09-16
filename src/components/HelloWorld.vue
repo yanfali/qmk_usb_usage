@@ -11,8 +11,9 @@
         />
       </div>
       <div class="right-top">
-        {{ this._rowData.length }} keyboards, {{ this.vids.length }} VIDs,
-        {{ this.pids.length }} PIDs
+        {{ this.lastUpdated }},
+        {{ this._rowData.length }}
+        keyboards, {{ this.vids.length }} VIDs, {{ this.pids.length }} PIDs
       </div>
     </div>
     <ag-grid-vue
@@ -69,7 +70,16 @@ export default {
       pids: [],
       filter: '',
       fuse: undefined,
-      gridApi: undefined
+      gridApi: undefined,
+      lastUpdated: new Date().toLocaleString(navigator.language, {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        timeZoneName: 'short'
+      })
     };
   },
   computed: {
@@ -89,11 +99,15 @@ export default {
       this.gridApi.setSortModel(sortModel);
     }
   },
-  beforeMount() {
+  mounted() {
     axios.get('https://keyboards.qmk.fm/v1/usb.json').then(resp => {
       let rowData = [];
       if (resp.status === 200) {
         const usb = resp.data.usb;
+        this.lastUpdated = Date.parse(resp.data.last_updated);
+        if (isNaN(this.lastUpdated)) {
+          this.lastUpdated = resp.data.last_updated;
+        }
         rowData = Object.keys(usb).reduce((acc, vid) => {
           const byVid = usb[vid];
           this.vids.push(vid);
